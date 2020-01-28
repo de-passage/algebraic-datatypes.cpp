@@ -6,7 +6,9 @@ using namespace algebraic_datatypes;
 
 using namespace std;
 
-#define eval_m(x) ::algebraic_datatypes::eval<decltype(x)>
+#define ev(...) ::algebraic_datatypes::eval<decltype(__VA_ARGS__)>
+#define P(...) type<ev(__VA_ARGS__)>
+
 template<class T, class U>
 constexpr static inline bool eq = is_same_v<T, U>;
 
@@ -20,14 +22,29 @@ static_assert(Int != Float);
 static_assert(Char != String);
 static_assert((Int + Char) + String == Int + (Char + String));
 static_assert((Int * Float) * Int == Int * (Float * Int));
+static_assert((Int * Float) * Int == Int * (Float * Int));
 
-static_assert(eq<eval_m(Int + Float), variant<int, float>>);
-static_assert(eq<eval_m(Int + Float + Char), variant<int, float, char>>);
-static_assert(eq<eval_m(Int * Float * Char), tuple<int, float, char>>);
-static_assert(eq<eval_m(Int ^ String ^ Char), function<int(char, string)>>);
-static_assert(eq<eval_m(Int ^ Float * Char), function<int(tuple<float, char>)>>);
+static_assert(eq<ev(Int + Float), variant<int, float>>);
+static_assert(eq<ev(Int + Float + Char), variant<int, float, char>>);
+static_assert(eq<ev(Int * Float * Char), tuple<int, float, char>>);
+static_assert(eq<ev(Int ^ String ^ Char), function<int(char, string)>>);
+static_assert(eq<ev(Int ^ Float * Char), function<int(tuple<float, char>)>>);
+static_assert(eq<ev((Int ^ Float) * Char), tuple<function<int(float)>, char>>);
+static_assert(eq<ev(one ^ String), function<void(string)>>);
+static_assert(eq<ev(one ^ one), function<void()>>);
+static_assert(eq<ev(one ^ String ^ one), function<void(string)>>);
+static_assert(eq<ev(one ^ one ^ one ^ one), function<void()>>);
 
 int main() {
+
+    auto Int3 = Int * Int * Int;
+    auto F = String ^ Char ^ Int;
+    auto test = String -> P(type<char> -> type<int>);
+    ev(test) f = [](string s, char c) { return 0; };
+
+    ev(Int3) int3 = {0, 1, 2};
+    ev(Int3 + F) was_it_really_necessary(in_place_index<0>, int3);
+    was_it_really_necessary = [] (char c, int i) { return string(c, i); };
 
     return 0;
 }

@@ -11,8 +11,13 @@ namespace algebraic_datatypes {
 struct empty;
 struct unit {};
 
+template<class T> struct adapter_t;
+
 template <class T>
-struct type_t {};
+struct type_t {
+    using type = T;
+    constexpr const adapter_t<T>* operator->() const noexcept;
+};
 
 using zero_t = type_t<empty>;
 using one_t = type_t<unit>;
@@ -78,6 +83,21 @@ struct pow_t {
   using type = type_t<std::function<T(U)>>;
 };
 
+template <>
+struct pow_t<unit, unit> {
+  using type = type_t<std::function<void()>>;
+};
+
+template <class R, class... U>
+struct pow_t<std::function<R(U...)>, unit> {
+  using type = type_t<std::function<R(U...)>>;
+};
+
+template <class T>
+struct pow_t<unit, T> {
+  using type = type_t<std::function<void(T)>>;
+};
+
 template <class T, class R, class... U>
 struct pow_t<std::function<R(U...)>, T> {
   using type = type_t<std::function<R(T, U...)>>;
@@ -92,7 +112,7 @@ constexpr add<U, V> operator+(type_t<U>, type_t<V>) noexcept {
 }
 
 template <class U, class V>
-constexpr mult<U, V> operator*(type_t<U>, type_t<V>)noexcept {
+constexpr mult<U, V> operator*(type_t<U>, type_t<V>) noexcept {
   return {};
 }
 
@@ -111,21 +131,31 @@ constexpr bool operator!=(type_t<U> u, type_t<V> v) noexcept {
   return !(u == v);
 }
 
+template<class T>
+struct adapter_t {
+    template<class U>
+    constexpr static inline pow<U, T> type;
+};
+
+template<class T>
+constexpr static inline adapter_t<T> adapter{};
+
+template<class T>
+constexpr const adapter_t<T>* type_t<T>::operator->() const noexcept { return &adapter<T>; }
+
 template <class T>
 constexpr inline static type_t<T> type{};
 constexpr inline static zero_t zero{};
 constexpr inline static one_t one{};
 
-template <class T>
-struct eval_t;
-
-template <class T>
-struct eval_t<type_t<T>> {
-  using type = T;
+template<class T>
+struct unoptimized_type_t {
+    using type = T;
+    constexpr const adapter_t<T>* operator->() const noexcept { return &adapter<T>; }
 };
 
 template <class T>
-using eval = typename eval_t<std::decay_t<T>>::type;
+using eval = typename T::type;
 
 }  // namespace algebraic_datatypes
 
