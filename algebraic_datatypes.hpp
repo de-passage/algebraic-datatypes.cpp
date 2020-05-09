@@ -122,6 +122,21 @@ constexpr pow<U, V> operator^(type_t<U>, type_t<V>) noexcept {
 }
 
 template <class U, class V>
+constexpr add<U, V> operator|(type_t<U>, type_t<V>) noexcept {
+  return {};
+}
+
+template <class U, class V>
+constexpr mult<U, V> operator&(type_t<U>, type_t<V>) noexcept {
+  return {};
+}
+
+template <class U, class V>
+constexpr pow<V, U> operator>>(type_t<U>, type_t<V>) noexcept {
+  return {};
+}
+
+template <class U, class V>
 constexpr bool operator==(type_t<U>, type_t<V>) noexcept {
   return std::is_same_v<U, V>;
 }
