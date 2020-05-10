@@ -9,7 +9,8 @@
 
 using namespace algebraic_datatypes;
 
-template <class T> using ev1 = ::algebraic_datatypes::eval<T, policies::use_std_types_t>;
+template <class T>
+using ev1 = ::algebraic_datatypes::eval<T, policies::use_std_types_t>;
 
 using namespace std;
 
@@ -89,3 +90,15 @@ static_assert(eq<ev1<type_t<int>>, int>);
 static_assert(eq<ev1<type_t<sum_type_t<int, double>>>, variant<int, double>>);
 static_assert(eq<ev1<type_t<sum_type_t<type_t<variant<int, double>>, double>>>,
                  variant<variant<int, double>, double>>);
+
+static_assert(eq<ev(argument_pack_t<char, double> {}->return_(type<int>)),
+                 function<int(char, double)>>);
+static_assert(eq<ev(argument_pack_t<char, double, double> {}->return_(type<int>)),
+                 function<int(char, double, double)>>);
+static_assert(
+    eq<ev((Char, Double)->return_(Int)), function<int(char, double)>>);
+
+static_assert(eq<decltype(operator,(Char, Double)), argument_pack_t<char, double>>);
+static_assert(eq<decltype(Char, Double, String), argument_pack_t<char, double, string>>);
+static_assert(eq<ev((Char, Char, Double)->return_(Int)),
+                 function<int(char, char, double)>>);

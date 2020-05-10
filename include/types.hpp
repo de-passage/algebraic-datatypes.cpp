@@ -21,6 +21,10 @@ template <class R, class... Ts> struct function_wrapper_t {
 template <class R, class... Ts>
 struct type_t<R(Ts...)> : type_t<function_wrapper_t<R, Ts...>> {};
 
+template <class First, class... Ts> struct argument_pack_t {
+  constexpr const adapter_t<First, Ts...> *operator->() const noexcept;
+};
+
 using zero_t = type_t<empty_t>;
 using one_t = type_t<unit_t>;
 
