@@ -24,8 +24,11 @@ static_assert((Int + Char) + String == Int + (Char + String));
 static_assert((Int * Float) * Int == Int * (Float * Int));
 static_assert((Int * Float) * Int == Int * (Float * Int));
 static_assert(Int + zero == Int);
-//static_assert(Int * zero == zero);
+static_assert(Int * zero == zero);
 static_assert(Int * one == Int);
+static_assert(zero + Int == Int);
+static_assert(zero * Int == zero);
+static_assert(one * Int == Int);
 
 static_assert(eq<ev(Int + Float), variant<int, float>>);
 static_assert(eq<ev(Int + Float + Char), variant<int, float, char>>);
