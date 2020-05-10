@@ -62,6 +62,8 @@ static_assert(eq<ev(Int &Float &Char), tuple<int, float, char>>);
 static_assert(eq<ev(Int &Float | Char), variant<tuple<int, float>, char>>);
 static_assert(eq<ev(Int | Float & Char), variant<int, tuple<float, char>>>);
 
+static_assert(unwrap(wrap(Int)) == Int);
+
 int main() {
 
   auto Int3 = Int * Int * Int;
@@ -93,12 +95,65 @@ static_assert(eq<ev1<type_t<sum_type_t<type_t<variant<int, double>>, double>>>,
 
 static_assert(eq<ev(argument_pack_t<char, double> {}->return_(type<int>)),
                  function<int(char, double)>>);
-static_assert(eq<ev(argument_pack_t<char, double, double> {}->return_(type<int>)),
-                 function<int(char, double, double)>>);
+static_assert(
+    eq<ev(argument_pack_t<char, double, double> {}->return_(type<int>)),
+       function<int(char, double, double)>>);
 static_assert(
     eq<ev((Char, Double)->return_(Int)), function<int(char, double)>>);
 
-static_assert(eq<decltype(operator,(Char, Double)), argument_pack_t<char, double>>);
-static_assert(eq<decltype(Char, Double, String), argument_pack_t<char, double, string>>);
+static_assert(
+    eq<decltype(operator,(Char, Double)), argument_pack_t<char, double>>);
+static_assert(
+    eq<decltype(Char, Double, String), argument_pack_t<char, double, string>>);
 static_assert(eq<ev((Char, Char, Double)->return_(Int)),
                  function<int(char, char, double)>>);
+
+constexpr int add(int i, int j) { return i + j; }
+
+constexpr int identity(int i) { return i; }
+
+template <typename Ret, typename Arg> constexpr auto curry(Ret (*f)(Arg)) {
+  return f;
+}
+
+template <
+    typename Ret, class Callable, class Arg,
+    class = std::enable_if_t<
+        std::is_same_v<decltype(std::declval<Callable>()(std::declval<Arg>())),
+        Ret>>>
+constexpr auto curry(Callable f) {
+  return f;
+}
+
+template <
+    typename Ret, class Callable, typename A1, typename A2, typename... As,
+    class = std::enable_if_t<
+        std::is_same_v<decltype(std::declval<Callable>()(
+            std::declval<A1>(), std::declval<A2>(), std::declval<As>()...))>,
+        Ret>>
+constexpr auto curry(Callable f) {
+  return [f = std::move(f)](A1 a1) {
+    const auto nf = [f = std::move(f), a1 = std::move(a1)](A2 a2, As... as) {
+      return f(a1, a2, as...);
+    };
+    return curry<Ret, decltype(nf), A2, As...>(nf);
+  };
+}
+
+template <typename Ret, typename A1, typename A2, typename... As>
+constexpr auto curry(Ret (*f)(A1, A2, As...)) {
+  return [f = std::move(f)](A1 a1) {
+    const auto nf = [f = std::move(f), a1 = std::move(a1)](A2 a2, As... as) {
+      return f(a1, a2, as...);
+    };
+    return curry<Ret, decltype(nf), A2, As...>(nf);
+  };
+}
+
+constexpr int foobar(int a, int b, int c) {
+    return a * b + c;
+}
+
+static_assert(curry(identity)(42) == 42);
+static_assert(curry(::add)(22)(20) == 42);
+static_assert(curry(::foobar)(22)(20)(7) == 42);

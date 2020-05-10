@@ -133,9 +133,9 @@ using eval = detail::apply_policy<P, T>;
 /////////////
 // Utility //
 /////////////
-template <class T> type_t<type_t<T>> wrap(type_t<T>) { return {}; }
+template <class T> constexpr type_t<type_t<T>> wrap(type_t<T>) { return {}; }
 
-template <class T> type_t<T> unwrap(type_t<type_t<T>>) { return {}; }
+template <class T> constexpr type_t<T> unwrap(type_t<type_t<T>>) { return {}; }
 
 } // namespace algebraic_datatypes
 
