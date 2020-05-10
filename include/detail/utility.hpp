@@ -68,6 +68,10 @@ struct merge_t<S, S<Ts...>, S<Us...>, One, Zero> {
 template <template <class...> class S, class T, class U, class One, class Zero = detail::ignore>
 using merge = typename merge_t<S, T, U, One, Zero>::type;
 
+/// Apply a policy to a type
+template <class P, class T, class S = P>
+using apply_policy = typename S::template policy<P, T>::type;
+
 } // namespace algebraic_datatypes::detail
 
 #endif // ALGEBRAIC_DATATYPES_DETAIL_UTILITY_HPP
