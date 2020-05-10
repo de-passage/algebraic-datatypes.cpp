@@ -52,13 +52,6 @@ static_assert(eq<ev(Int | Float | Char), variant<int, float, char>>);
 static_assert(eq<ev(Int & Float & Char), tuple<int, float, char>>);
 static_assert(eq<ev(Int & Float | Char), variant<tuple<int, float>, char>>);
 static_assert(eq<ev(Int | Float & Char), variant<int, tuple<float, char>>>);
-static_assert(eq<ev(Char >> (String >> Int)), function<int(char, string)>>);
-static_assert(eq<ev((Float & Char) >> Int), function<int(tuple<float, char>)>>);
-static_assert(eq<ev(Float >> Int & Char), tuple<function<int(float)>, char>>);
-static_assert(eq<ev(String >> one), function<void(string)>>);
-static_assert(eq<ev(one >> one), function<void()>>);
-static_assert(eq<ev(one >> (String >> one)), function<void(string)>>);
-static_assert(eq<ev(one >> (one >> (one >> one))), function<void()>>);
 
 int main() {
 
