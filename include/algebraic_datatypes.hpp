@@ -100,8 +100,8 @@ constexpr bool operator!=(type_t<U, Tag> u, type_t<V, Tag> v) noexcept {
 // Function stuffs //
 /////////////////////
 
-template <class... Ts> struct adapter_t {
-  template <class U, class Tag>
+template <class Tag, class... Ts> struct adapter_t {
+  template <class U>
   constexpr type_t<function_wrapper_t<U, Ts...>, Tag>
   return_(type_t<U, Tag>) const noexcept {
     return {};
@@ -111,8 +111,8 @@ template <class... Ts> struct adapter_t {
 template <class... Ts> constexpr static inline adapter_t<Ts...> adapter{};
 
 template <class T, class Tag>
-constexpr const adapter_t<T> *type_t<T, Tag>::operator->() const noexcept {
-  return &adapter<T>;
+constexpr const adapter_t<Tag, T> *type_t<T, Tag>::operator->() const noexcept {
+  return &adapter<Tag, T>;
 }
 
 template <class T, class Tag = default_tag>
@@ -120,16 +120,17 @@ constexpr inline static type_t<T, Tag> type{};
 template <class Tag = default_tag> constexpr inline static zero_t<Tag> zero{};
 template <class Tag = default_tag> constexpr inline static one_t<Tag> one{};
 
-template <class First, class... Ts>
-constexpr const adapter_t<First, Ts...> *
-    argument_pack_t<First, Ts...>::operator->() const noexcept {
-  return &adapter<First, Ts...>;
+template <class Tag, class First, class... Ts>
+constexpr const adapter_t<Tag, First, Ts...> *
+    argument_pack_t<Tag, First, Ts...>::operator->() const noexcept {
+  return &adapter<Tag, First, Ts...>;
 }
 
 template <class Left, class Right,
+          class Config = detail::common_config_tag<Left, Right>,
           class = std::enable_if_t<detail::is_type_or_argument_pack<Left> &&
                                    detail::is_type_or_argument_pack<Right>>>
-detail::unpack_into<argument_pack_t, Left, Right> operator,(Left, Right) {
+detail::unpack_into<detail::bind_front_t<argument_pack_t, Config>::template type, Left, Right> operator,(Left, Right) {
   return {};
 }
 

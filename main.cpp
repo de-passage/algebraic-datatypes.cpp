@@ -8,8 +8,8 @@
 #include <variant>
 
 namespace adt = ::algebraic_datatypes;
-using adt::type_t;
 using adt::type;
+using adt::type_t;
 
 template <class T>
 using ev1 = ::algebraic_datatypes::eval<T, adt::policies::use_std_types_t>;
@@ -83,10 +83,10 @@ int main() {
 }
 //*/
 
-using adt::function_wrapper_t;
-using adt::sum_type_t;
-using adt::product_type_t;
 using adt::argument_pack_t;
+using adt::function_wrapper_t;
+using adt::product_type_t;
+using adt::sum_type_t;
 static_assert(eq<ev(Int ^ Double), function<int(double)>>);
 static_assert(eq<ev1<decltype(Int ^ Double * Int)>,
                  function<int(std::tuple<double, int>)>>);
@@ -101,17 +101,34 @@ static_assert(eq<ev1<type_t<sum_type_t<int, double>>>, variant<int, double>>);
 static_assert(eq<ev1<type_t<sum_type_t<type_t<variant<int, double>>, double>>>,
                  variant<variant<int, double>, double>>);
 
-static_assert(eq<ev(argument_pack_t<char, double> {}->return_(type<int>)),
+static_assert(eq<ev(argument_pack_t<adt::default_tag, char, double> {}->return_(type<int>)),
                  function<int(char, double)>>);
 static_assert(
-    eq<ev(argument_pack_t<char, double, double> {}->return_(type<int>)),
+    eq<ev(argument_pack_t<adt::default_tag, char, double, double> {}->return_(type<int>)),
        function<int(char, double, double)>>);
 static_assert(
     eq<ev((Char, Double)->return_(Int)), function<int(char, double)>>);
 
-static_assert(
-    eq<decltype(operator,(Char, Double)), argument_pack_t<char, double>>);
-static_assert(
-    eq<decltype(Char, Double, String), argument_pack_t<char, double, string>>);
+static_assert(eq<decltype(operator,(Char, Double)),
+                 argument_pack_t<adt::default_tag, char, double>>);
+static_assert(eq<decltype(Char, Double, String),
+                 argument_pack_t<adt::default_tag, char, double, string>>);
 static_assert(eq<ev((Char, Char, Double)->return_(Int)),
                  function<int(char, char, double)>>);
+
+static_assert(
+    eq<adt::detail::common_config_tag<
+           argument_pack_t<adt::default_tag, char, double>, type_t<int>>,
+       adt::default_tag>);
+static_assert(
+    eq<adt::detail::bind_front_t<adt::argument_pack_t, int>::type<char>,
+       adt::argument_pack_t<int, char>>);
+static_assert(
+    eq<adt::detail::unpack_into<adt::detail::list, type_t<int>, type_t<double>>,
+       adt::detail::list<int, double>>);
+static_assert(
+    eq<adt::detail::unpack_into<adt::detail::bind_front_t<adt::detail::list, char>::template type, type_t<int>>,
+       adt::detail::list<char, int>>);
+static_assert(
+    eq<adt::detail::unpack_into<adt::detail::bind_front_t<adt::detail::list, char>::template type, type_t<int>, type_t<double>>,
+       adt::detail::list<char, int, double>>);
