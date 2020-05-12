@@ -78,6 +78,8 @@ using merge = typename merge_t<S, T, U, One, Zero>::type;
 template <class P, class T, class S = P>
 using apply_policy = typename S::template policy<P, T>::type;
 
+// Extract the template arguments of a list of types and combine them into a new
+// list
 template <template <class...> class C, class C1, class... Ts>
 struct unpack_into_t;
 
@@ -93,12 +95,25 @@ struct unpack_into_t<C, C1<Ts...>> {
   using type = C<Ts...>;
 };
 
+template <class... Ts> struct list;
+template <class T> struct to_meta_list_t;
 template <template <class...> class C, class... Ts>
-using unpack_into = typename unpack_into_t<C, Ts...>::type;
+struct to_meta_list_t<C<Ts...>> {
+  using type = list<Ts...>;
+};
+template <class T, class Tag> struct to_meta_list_t<type_t<T, Tag>> {
+  using type = list<T>;
+};
+
+template<class T>
+using to_meta_list = typename to_meta_list_t<T>::type;
+
+template <template <class...> class C, class... Ts>
+using unpack_into = typename unpack_into_t<C, to_meta_list<Ts>...>::type;
 
 template <class T> struct is_type_or_argument_pack_t : std::false_type {};
-template <class T>
-struct is_type_or_argument_pack_t<type_t<T>> : std::true_type {};
+template <class T, class Tag>
+struct is_type_or_argument_pack_t<type_t<T, Tag>> : std::true_type {};
 template <class... Ts>
 struct is_type_or_argument_pack_t<argument_pack_t<Ts...>> : std::true_type {};
 

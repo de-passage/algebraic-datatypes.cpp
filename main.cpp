@@ -7,10 +7,12 @@
 #include <tuple>
 #include <variant>
 
-using namespace algebraic_datatypes;
+namespace adt = ::algebraic_datatypes;
+using adt::type_t;
+using adt::type;
 
 template <class T>
-using ev1 = ::algebraic_datatypes::eval<T, policies::use_std_types_t>;
+using ev1 = ::algebraic_datatypes::eval<T, adt::policies::use_std_types_t>;
 
 using namespace std;
 
@@ -24,6 +26,8 @@ static constexpr inline auto Float = type<float>;
 static constexpr inline auto Char = type<char>;
 static constexpr inline auto String = type<string>;
 static constexpr inline auto Double = type<double>;
+static constexpr inline auto Zero = adt::zero<>;
+static constexpr inline auto One = adt::one<>;
 
 //*
 static_assert(Int == Int);
@@ -32,12 +36,12 @@ static_assert(Char != String);
 static_assert((Int + Char) + String == Int + (Char + String));
 static_assert((Int * Float) * Int == Int * (Float * Int));
 static_assert((Int * Float) * Int == Int * (Float * Int));
-static_assert(Int + zero == Int);
-static_assert(Int * zero == zero);
-static_assert(Int * one == Int);
-static_assert(zero + Int == Int);
-static_assert(zero * Int == zero);
-static_assert(one * Int == Int);
+static_assert(Int + Zero == Int);
+static_assert(Int * Zero == Zero);
+static_assert(Int * One == Int);
+static_assert(Zero + Int == Int);
+static_assert(Zero * Int == Zero);
+static_assert(One * Int == Int);
 
 static_assert(eq<ev(Int + Float), variant<int, float>>);
 static_assert(eq<ev(Int + Float + Char), variant<int, float, char>>);
@@ -47,10 +51,10 @@ static_assert(eq<ev(Int + Float * Char), variant<int, tuple<float, char>>>);
 static_assert(eq<ev(Int ^ String ^ Char), function<int(char, string)>>);
 static_assert(eq<ev(Int ^ Float * Char), function<int(tuple<float, char>)>>);
 static_assert(eq<ev((Int ^ Float) * Char), tuple<function<int(float)>, char>>);
-static_assert(eq<ev(one ^ String), function<void(string)>>);
-static_assert(eq<ev(one ^ one), function<void()>>);
-static_assert(eq<ev(one ^ String ^ one), function<void(string)>>);
-static_assert(eq<ev(one ^ one ^ one ^ one), function<void()>>);
+static_assert(eq<ev(One ^ String), function<void(string)>>);
+static_assert(eq<ev(One ^ One), function<void()>>);
+static_assert(eq<ev(One ^ String ^ One), function<void(string)>>);
+static_assert(eq<ev(One ^ One ^ One ^ One), function<void()>>);
 
 static_assert(((Int | Char) | String) == (Int | (Char | String)));
 static_assert(((Int & Float) & Int) == (Int & (Float & Int)));
@@ -79,6 +83,10 @@ int main() {
 }
 //*/
 
+using adt::function_wrapper_t;
+using adt::sum_type_t;
+using adt::product_type_t;
+using adt::argument_pack_t;
 static_assert(eq<ev(Int ^ Double), function<int(double)>>);
 static_assert(eq<ev1<decltype(Int ^ Double * Int)>,
                  function<int(std::tuple<double, int>)>>);
@@ -107,53 +115,3 @@ static_assert(
     eq<decltype(Char, Double, String), argument_pack_t<char, double, string>>);
 static_assert(eq<ev((Char, Char, Double)->return_(Int)),
                  function<int(char, char, double)>>);
-
-constexpr int add(int i, int j) { return i + j; }
-
-constexpr int identity(int i) { return i; }
-
-template <typename Ret, typename Arg> constexpr auto curry(Ret (*f)(Arg)) {
-  return f;
-}
-
-template <
-    typename Ret, class Callable, class Arg,
-    class = std::enable_if_t<
-        std::is_same_v<decltype(std::declval<Callable>()(std::declval<Arg>())),
-        Ret>>>
-constexpr auto curry(Callable f) {
-  return f;
-}
-
-template <
-    typename Ret, class Callable, typename A1, typename A2, typename... As,
-    class = std::enable_if_t<
-        std::is_same_v<decltype(std::declval<Callable>()(
-            std::declval<A1>(), std::declval<A2>(), std::declval<As>()...))>,
-        Ret>>
-constexpr auto curry(Callable f) {
-  return [f = std::move(f)](A1 a1) {
-    const auto nf = [f = std::move(f), a1 = std::move(a1)](A2 a2, As... as) {
-      return f(a1, a2, as...);
-    };
-    return curry<Ret, decltype(nf), A2, As...>(nf);
-  };
-}
-
-template <typename Ret, typename A1, typename A2, typename... As>
-constexpr auto curry(Ret (*f)(A1, A2, As...)) {
-  return [f = std::move(f)](A1 a1) {
-    const auto nf = [f = std::move(f), a1 = std::move(a1)](A2 a2, As... as) {
-      return f(a1, a2, as...);
-    };
-    return curry<Ret, decltype(nf), A2, As...>(nf);
-  };
-}
-
-constexpr int foobar(int a, int b, int c) {
-    return a * b + c;
-}
-
-static_assert(curry(identity)(42) == 42);
-static_assert(curry(::add)(22)(20) == 42);
-static_assert(curry(::foobar)(22)(20)(7) == 42);
