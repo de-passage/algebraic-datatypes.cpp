@@ -168,6 +168,11 @@ constexpr type_t<type_t<T, Tag>> wrap(type_t<T, Tag>) {
 }
 
 template <class T, class Tag>
+constexpr type_t<type_t<T, Tag>> operator~(type_t<T, Tag>) {
+  return {};
+}
+
+template <class T, class Tag>
 constexpr type_t<T, Tag> unwrap(type_t<type_t<T, Tag>>) {
   return {};
 }

@@ -148,7 +148,17 @@ struct config {
 ALGEBRAIC_DATATYPES_CONFIGURE(config)
 
 constexpr static inline auto Int = type<int>;
+constexpr static inline auto Double = type<double>;
 
 static_assert(eq<ev(Int->Int), std::function<int(int)>>);
-static_assert(eq<ev(Int->Double->Int), std::function<int(std::function<double(int)>)>>);
+static_assert(
+    eq<ev(Int->Double->Int), std::function<int(std::function<double(int)>)>>);
+static_assert(eq<ev(Int->return_(Double->Int)),
+                 std::function<function<int(double)>(int)>>);
 } // namespace a1
+
+constexpr static inline auto foo = [](auto a) {
+  return a & Int & (Double | a);
+};
+static_assert(eq<ev(foo(Char)), tuple<char, int, variant<double, char>>>);
+static_assert(eq<ev(foo(String)), tuple<string, int, variant<double, string>>>);
