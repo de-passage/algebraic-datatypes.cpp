@@ -100,7 +100,28 @@ constexpr bool operator!=(type_t<U, Tag> u, type_t<V, Tag> v) noexcept {
 // Function stuffs //
 /////////////////////
 
-template <class Tag, class... Ts> struct adapter_t {
+template <class Tag, class = void> struct aliases {};
+template <class T>
+struct aliases<T, std::void_t<typename T::template aliases<T>>>
+    : T::template aliases<T> {};
+
+template <class T, class TagContainer>
+constexpr static inline type_t<
+    detail::unpack_into<
+        detail::bind_front_t<function_wrapper_t, T>::template type,
+        typename TagContainer::arg_list>,
+    typename TagContainer::tag>
+    alias{};
+
+namespace detail {
+template <class Tag, class... Ts> struct tag_container : Tag {
+  using arg_list = detail::list<Ts...>;
+  using tag = Tag;
+};
+} // namespace detail
+
+template <class Tag, class... Ts>
+struct adapter_t : aliases<detail::tag_container<Tag, Ts...>> {
   template <class U>
   constexpr type_t<function_wrapper_t<U, Ts...>, Tag>
   return_(type_t<U, Tag>) const noexcept {
@@ -128,9 +149,10 @@ constexpr const adapter_t<Tag, First, Ts...> *
 
 template <class Left, class Right,
           class Config = detail::common_config_tag<Left, Right>,
-          class = std::enable_if_t<detail::is_type_or_argument_pack<Left> &&
-                                   detail::is_type_or_argument_pack<Right>>>
-detail::unpack_into<detail::bind_front_t<argument_pack_t, Config>::template type, Left, Right> operator,(Left, Right) {
+          class R = detail::unpack_into<
+              detail::bind_front_t<argument_pack_t, Config>::template type,
+              Left, Right>>
+R operator,(Left, Right) {
   return {};
 }
 
@@ -153,7 +175,8 @@ constexpr type_t<T, Tag> unwrap(type_t<type_t<T, Tag>>) {
 #define ALGEBRAIC_DATATYPES_CONFIGURE(Config)                                  \
   template <class T> using type_t = ::algebraic_datatypes::type_t<T, Config>;  \
   template <class T>                                                           \
-  constexpr static inline auto type = ::algebraic_datatypes::type<T, Config>;
+  [[maybe_unused]] constexpr static inline auto type =                         \
+      ::algebraic_datatypes::type<T, Config>;
 
 } // namespace algebraic_datatypes
 

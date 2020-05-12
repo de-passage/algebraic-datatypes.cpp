@@ -11,6 +11,9 @@ struct unwrap_t {
   template <class P, class T, class Tag> struct policy<P, type_t<T, Tag>> {
     using type = detail::apply_policy<P, T>;
   };
+  template <class P, class T, class Tag> struct policy<P, const type_t<T, Tag>> {
+    using type = detail::apply_policy<P, T>;
+  };
 };
 
 } // namespace policies

@@ -10,7 +10,7 @@ template <class Tag, class...> struct adapter_t;
 template <class...> struct sum_type_t;
 template <class...> struct product_type_t;
 
-template <class T, class Tag = default_tag> struct type_t : Tag {
+template <class T, class Tag = default_tag> struct type_t {
   using type = T;
   constexpr const adapter_t<Tag, T> *operator->() const noexcept;
 };

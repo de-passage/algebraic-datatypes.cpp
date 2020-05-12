@@ -101,11 +101,12 @@ static_assert(eq<ev1<type_t<sum_type_t<int, double>>>, variant<int, double>>);
 static_assert(eq<ev1<type_t<sum_type_t<type_t<variant<int, double>>, double>>>,
                  variant<variant<int, double>, double>>);
 
-static_assert(eq<ev(argument_pack_t<adt::default_tag, char, double> {}->return_(type<int>)),
+static_assert(eq<ev(argument_pack_t<adt::default_tag, char, double> {
+                 }->return_(type<int>)),
                  function<int(char, double)>>);
-static_assert(
-    eq<ev(argument_pack_t<adt::default_tag, char, double, double> {}->return_(type<int>)),
-       function<int(char, double, double)>>);
+static_assert(eq<ev(argument_pack_t<adt::default_tag, char, double, double> {
+                 }->return_(type<int>)),
+                 function<int(char, double, double)>>);
 static_assert(
     eq<ev((Char, Double)->return_(Int)), function<int(char, double)>>);
 
@@ -127,8 +128,27 @@ static_assert(
     eq<adt::detail::unpack_into<adt::detail::list, type_t<int>, type_t<double>>,
        adt::detail::list<int, double>>);
 static_assert(
-    eq<adt::detail::unpack_into<adt::detail::bind_front_t<adt::detail::list, char>::template type, type_t<int>>,
+    eq<adt::detail::unpack_into<
+           adt::detail::bind_front_t<adt::detail::list, char>::template type,
+           type_t<int>>,
        adt::detail::list<char, int>>);
 static_assert(
-    eq<adt::detail::unpack_into<adt::detail::bind_front_t<adt::detail::list, char>::template type, type_t<int>, type_t<double>>,
+    eq<adt::detail::unpack_into<
+           adt::detail::bind_front_t<adt::detail::list, char>::template type,
+           type_t<int>, type_t<double>>,
        adt::detail::list<char, int, double>>);
+
+namespace a1 {
+struct config {
+  template <class T> struct aliases {
+    constexpr static inline auto Int = adt::alias<int, T>;
+    constexpr static inline auto Double = adt::alias<double, T>;
+  };
+};
+ALGEBRAIC_DATATYPES_CONFIGURE(config)
+
+constexpr static inline auto Int = type<int>;
+
+static_assert(eq<ev(Int->Int), std::function<int(int)>>);
+static_assert(eq<ev(Int->Double->Int), std::function<int(std::function<double(int)>)>>);
+} // namespace a1
