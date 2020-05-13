@@ -127,6 +127,9 @@ struct adapter_t : aliases<detail::tag_container<Tag, Ts...>> {
   return_(type_t<U, Tag>) const noexcept {
     return {};
   }
+
+  template<class U>
+  constexpr static inline type_t<function_wrapper_t<U, Ts...>, Tag> type{}; 
 };
 
 template <class... Ts> constexpr static inline adapter_t<Ts...> adapter{};

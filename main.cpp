@@ -150,12 +150,21 @@ ALGEBRAIC_DATATYPES_CONFIGURE(config)
 constexpr static inline auto Int = type<int>;
 constexpr static inline auto Double = type<double>;
 
+static_assert(eq<ev(Int), int>);
+static_assert(eq<ev(Int & Int), std::tuple<int, int>>);
+static_assert(eq<ev(Int ^ Int), std::function<int(int)>>);
+
 static_assert(eq<ev(Int->Int), std::function<int(int)>>);
+static_assert(eq<ev(type<int>->type<int>), std::function<int(int)>>);
 static_assert(
     eq<ev(Int->Double->Int), std::function<int(std::function<double(int)>)>>);
 static_assert(eq<ev(Int->return_(Double->Int)),
                  std::function<function<int(double)>(int)>>);
 } // namespace a1
+
+template<class T> using T2 = adt::type_t<T, a1::config>;
+template<class T> constexpr static inline auto type2 = adt::type<T, a1::config>;
+static_assert(eq<ev(type2<int> & type2<int> | type2<char> & type2<char>), variant<tuple<int, int>, tuple<char, char>>>);
 
 constexpr static inline auto foo = [](auto a) {
   return a & Int & (Double | a);
