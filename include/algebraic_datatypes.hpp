@@ -128,11 +128,12 @@ struct adapter_t : aliases<detail::tag_container<Tag, Ts...>> {
     return {};
   }
 
-  template<class U>
-  constexpr static inline type_t<function_wrapper_t<U, Ts...>, Tag> type{}; 
+  template <class U>
+  constexpr static inline type_t<function_wrapper_t<U, Ts...>, Tag> type{};
 };
 
-template <class... Ts> constexpr static inline adapter_t<Ts...> adapter{};
+template <class... Ts>
+[[maybe_unused]] constexpr static inline adapter_t<Ts...> adapter{};
 
 template <class T, class Tag>
 constexpr const adapter_t<Tag, T> *type_t<T, Tag>::operator->() const noexcept {
@@ -155,7 +156,7 @@ template <class Left, class Right,
           class R = detail::unpack_into<
               detail::bind_front_t<argument_pack_t, Config>::template type,
               Left, Right>>
-R operator,(Left, Right) {
+constexpr R operator,(Left, Right) noexcept {
   return {};
 }
 
