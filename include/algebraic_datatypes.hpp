@@ -30,51 +30,9 @@ template <class T, class U, class Tag> struct mult_t {
 template <class T, class U, class Tag>
 using mult = typename mult_t<T, U, Tag>::type;
 
-/** Computes the power type of T and U
- */
-template <class T, class U, class Tag> struct pow_t {
-  using type = type_t<function_wrapper_t<T, U>, Tag>;
-};
-
-template <class Tag> struct pow_t<unit_t, unit_t, Tag> {
-  using type = type_t<function_wrapper_t<void>, Tag>;
-};
-
-template <class R, class Tag, class... U>
-struct pow_t<function_wrapper_t<R, U...>, unit_t, Tag> {
-  using type = type_t<function_wrapper_t<R, U...>, Tag>;
-};
-
-template <class T, class Tag> struct pow_t<unit_t, T, Tag> {
-  using type = type_t<function_wrapper_t<void, T>, Tag>;
-};
-
-template <class T, class R, class Tag, class... U>
-struct pow_t<function_wrapper_t<R, U...>, T, Tag> {
-  using type = type_t<function_wrapper_t<R, T, U...>, Tag>;
-};
-
-template <class T, class U, class Tag>
-using pow = typename pow_t<T, U, Tag>::type;
-
 ///////////////
 // Operators //
 ///////////////
-
-template <class U, class V, class Tag>
-constexpr add<U, V, Tag> operator+(type_t<U, Tag>, type_t<V, Tag>) noexcept {
-  return {};
-}
-
-template <class U, class V, class Tag>
-constexpr mult<U, V, Tag> operator*(type_t<U, Tag>, type_t<V, Tag>)noexcept {
-  return {};
-}
-
-template <class U, class V, class Tag>
-constexpr pow<U, V, Tag> operator^(type_t<U, Tag>, type_t<V, Tag>) noexcept {
-  return {};
-}
 
 template <class U, class V, class Tag>
 constexpr add<U, V, Tag> operator|(type_t<U, Tag>, type_t<V, Tag>) noexcept {

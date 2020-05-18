@@ -115,15 +115,22 @@ using to_meta_list = typename to_meta_list_t<T>::type;
 template <template <class...> class C, class... Ts>
 using unpack_into = typename unpack_into_t<C, to_meta_list<Ts>...>::type;
 
-template <class T> struct is_type_or_argument_pack_t : std::false_type {};
-template <class T, class Tag>
-struct is_type_or_argument_pack_t<type_t<T, Tag>> : std::true_type {};
+template<class T> struct is_argument_pack_t : std::false_type {};
 template <class Tag, class... Ts>
-struct is_type_or_argument_pack_t<argument_pack_t<Tag, Ts...>> : std::true_type {};
+struct is_argument_pack_t<argument_pack_t<Tag, Ts...>> : std::true_type {};
+
+template <class T> struct is_type_t : std::false_type {};
+template <class T, class Tag>
+struct is_type_t<type_t<T, Tag>> : std::true_type {};
+
+template <class T>
+constexpr static inline bool is_type = is_type_t<T>::value;
+template <class T>
+constexpr static inline bool is_argument_pack = is_argument_pack_t<T>::value;
 
 template <class T>
 constexpr static inline bool is_type_or_argument_pack =
-    is_type_or_argument_pack_t<T>::value;
+    is_type<T> || is_argument_pack<T>;
 
 template<template <class ...> class C, class ...Ts>
 struct bind_front_t {

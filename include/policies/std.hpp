@@ -19,6 +19,17 @@ struct use_std_function_t {
     using type = std::function<detail::apply_policy<P, R>(
         detail::apply_policy<P, Ts>...)>;
   };
+
+  template <class P, class R>
+  struct policy<P, function_wrapper_t<R>> {
+    using type = R;
+  };
+
+  template <class P, class R, class C, class ...As, class... Ts>
+  struct policy<P, function_wrapper_t<R, argument_pack_t<C, As...>, Ts...>> {
+    using type = typename policy<P, function_wrapper_t<std::function<detail::apply_policy<P, R>(
+        detail::apply_policy<P, As>...)>, Ts...>>::type;
+  };
 };
 
 struct use_std_tuple_t {

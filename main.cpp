@@ -33,28 +33,6 @@ static constexpr inline auto One = adt::one<>;
 static_assert(Int == Int);
 static_assert(Int != Float);
 static_assert(Char != String);
-static_assert((Int + Char) + String == Int + (Char + String));
-static_assert((Int * Float) * Int == Int * (Float * Int));
-static_assert((Int * Float) * Int == Int * (Float * Int));
-static_assert(Int + Zero == Int);
-static_assert(Int * Zero == Zero);
-static_assert(Int * One == Int);
-static_assert(Zero + Int == Int);
-static_assert(Zero * Int == Zero);
-static_assert(One * Int == Int);
-
-static_assert(eq<ev(Int + Float), variant<int, float>>);
-static_assert(eq<ev(Int + Float + Char), variant<int, float, char>>);
-static_assert(eq<ev(Int *Float *Char), tuple<int, float, char>>);
-static_assert(eq<ev(Int *Float + Char), variant<tuple<int, float>, char>>);
-static_assert(eq<ev(Int + Float * Char), variant<int, tuple<float, char>>>);
-static_assert(eq<ev(Int ^ String ^ Char), function<int(char, string)>>);
-static_assert(eq<ev(Int ^ Float * Char), function<int(tuple<float, char>)>>);
-static_assert(eq<ev((Int ^ Float) * Char), tuple<function<int(float)>, char>>);
-static_assert(eq<ev(One ^ String), function<void(string)>>);
-static_assert(eq<ev(One ^ One), function<void()>>);
-static_assert(eq<ev(One ^ String ^ One), function<void(string)>>);
-static_assert(eq<ev(One ^ One ^ One ^ One), function<void()>>);
 
 static_assert(((Int | Char) | String) == (Int | (Char | String)));
 static_assert(((Int & Float) & Int) == (Int & (Float & Int)));
@@ -70,15 +48,6 @@ static_assert(unwrap(wrap(Int)) == Int);
 
 int main() {
 
-  auto Int3 = Int * Int * Int;
-  auto F = String ^ Char ^ Int;
-  auto test = String->return_(Char->return_(Int));
-  ev(test) f = [](string) { return [](char) { return 0; }; };
-
-  ev(Int3) int3 = {0, 1, 2};
-  ev(Int3 + F) was_it_really_necessary(in_place_index<0>, int3);
-  was_it_really_necessary = [](char c, int i) { return string(c, i); };
-
   return 0;
 }
 //*/
@@ -87,14 +56,6 @@ using adt::argument_pack_t;
 using adt::function_wrapper_t;
 using adt::product_type_t;
 using adt::sum_type_t;
-static_assert(eq<ev(Int ^ Double), function<int(double)>>);
-static_assert(eq<ev1<decltype(Int ^ Double * Int)>,
-                 function<int(std::tuple<double, int>)>>);
-static_assert(
-    eq<ev1<decltype(Int ^ Double ^ Char)>, function<int(char, double)>>);
-static_assert(eq<ev1<type_t<function_wrapper_t<function_wrapper_t<int>,
-                                               function_wrapper_t<int>>>>,
-                 function<function<int()>(function<int()>)>>);
 
 static_assert(eq<ev1<type_t<int>>, int>);
 static_assert(eq<ev1<type_t<sum_type_t<int, double>>>, variant<int, double>>);
@@ -152,7 +113,6 @@ constexpr static inline auto Double = type<double>;
 
 static_assert(eq<ev(Int), int>);
 static_assert(eq<ev(Int & Int), std::tuple<int, int>>);
-static_assert(eq<ev(Int ^ Int), std::function<int(int)>>);
 
 static_assert(eq<ev(Int->Int), std::function<int(int)>>);
 static_assert(eq<ev(type<int>->type<int>), std::function<int(int)>>);
@@ -169,5 +129,44 @@ static_assert(eq<ev(type2<int> & type2<int> | type2<char> & type2<char>), varian
 constexpr static inline auto foo = [](auto a) {
   return a & Int & (Double | a);
 };
+
 static_assert(eq<ev(foo(Char)), tuple<char, int, variant<double, char>>>);
 static_assert(eq<ev(foo(String)), tuple<string, int, variant<double, string>>>);
+
+struct function_pseudo_operator_core {}
+    constexpr static inline D{};
+template<class C, class ...Ts>
+struct partially_applied_function_pseudo_operator{};
+
+template<class T, class C>
+partially_applied_function_pseudo_operator<C, argument_pack_t<C, T>> 
+    operator-(type_t<T, C>, function_pseudo_operator_core) noexcept {
+    return {};
+}
+
+template<class ...Ts, class C>
+partially_applied_function_pseudo_operator<C, argument_pack_t<C,  Ts...>> 
+    operator-(argument_pack_t<C, Ts...>, function_pseudo_operator_core) noexcept {
+    return {};
+}
+
+template<class C, class R, class... Ts>
+constexpr type_t<function_wrapper_t<R, Ts...>, C>
+    operator>(partially_applied_function_pseudo_operator<C, Ts...>, type_t<R, C>) noexcept {
+    return {};
+}
+
+template<class C, class... Ts, class R>
+constexpr partially_applied_function_pseudo_operator<C, R, Ts...>
+    operator>(partially_applied_function_pseudo_operator<C, Ts...>,
+              partially_applied_function_pseudo_operator<C, R>) noexcept {
+    return {};
+}
+
+static_assert(eq<ev(Int -D> Float), function<float(int)>>);
+static_assert(eq<ev(Int -D> Char -D> Float), function<function<float(char)>(int)>>);
+static_assert(eq<ev(Int -D> (Char, Double) -D> Float), function<function<float(char, double)>(int)>>);
+static_assert(eq<ev(Int -D> (Float & Char)), function<tuple<float, char>(int)>>);
+static_assert(eq<ev((Float & Int) -D> Char), function<char(tuple<float, int>)>>);
+static_assert(eq<ev((Float, Int) -D> Char), function<char(float, int)>>);
+static_assert(eq<ev(Int -D> (Float | Char)), function<variant<float, char>(int)>>);
